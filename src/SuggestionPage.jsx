@@ -277,7 +277,7 @@ export default function SuggestionPage() {
 
             </div>
             <div className="w-full flex p-7 justify-end">
-                <button onClick={returntopredict} className="w-60 h-10 bg-gradient-to-br text-white from-red-700 hover:cursor-pointer font-extrabold to-red-400">logout</button>
+                <button onClick={returntopredict} className="w-60 h-10 bg-gradient-to-br text-white from-red-700 hover:cursor-pointer font-extrabold to-red-400">back to predict</button>
             </div>
             
 
