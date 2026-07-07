@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     BarChart,
@@ -16,6 +16,8 @@ export default function Prediction() {
   const [prediction, setPrediction] = useState("");
   const [probabilities, setProbabilities] = useState([]);
   const [chartdata , setChatdata] = useState([])
+  const resultref = useRef()
+  const [loading, setLoading] = useState(false);
     const mappings = {
   Gender: {
     Female: 0,
@@ -115,6 +117,7 @@ export default function Prediction() {
   }
 
   const handleSubmit = async (e) => {
+    setLoading(true)
     e.preventDefault();
     const numericData = convertToNumeric(formData);
     try {
@@ -128,6 +131,7 @@ export default function Prediction() {
       if(response == 422){
 
       }else{
+        await new Promise(resolve => setTimeout(resolve, 3000));
         const data = await response.json();
       const probs = data.probability;
       console.log(probs)
@@ -163,12 +167,19 @@ export default function Prediction() {
             probability: (probs?.[6] ?? 0) * 100,
         },
         ];
-        
         setChatdata(Data);
+        setTimeout(() => {
+            resultref.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+            });
+        }, 100);
       }
       
             } catch (err) {
             console.log(err);
+            }finally{
+              setLoading(false)
             }
   };
 
@@ -201,6 +212,10 @@ export default function Prediction() {
       </div>
     </div>
   );
+
+  const preventWheelChange = (e) => {
+    e.target.blur();
+  };
 
   const suggestions = {
         Insufficient_Weight: [
@@ -268,7 +283,11 @@ export default function Prediction() {
         <div className="grid grid-cols-1 lg:grid-cols-5">
             <div className="lg:col-span-3 p-4 sm:p-6 border-b lg:border-b-0 lg:border-r">
               <div className="pb-4 ">
-                <h1 className="text-3xl font-bold ">
+                <h1 className="text-3xl font-mono font-bold flex gap-5 ">
+                  <img  src={"/logo.png"}
+                  alt="Logo"
+                  className="h-12 w-12  object-contain">
+                  </img>
                   Obesity Prediction
                 </h1>
                 <h2>fill in the details given below to get your result</h2>
@@ -320,6 +339,7 @@ export default function Prediction() {
               name="Age"
               value={formData.Age}
               onChange={handleChange}
+              onWheel={preventWheelChange}
               className="w-full border rounded-lg p-3"
             />
           </div>
@@ -335,6 +355,7 @@ export default function Prediction() {
               name="Height"
               value={formData.Height}
               onChange={handleChange}
+              onWheel={preventWheelChange}
               className="w-full border rounded-lg p-3"
             />
           </div>
@@ -349,6 +370,7 @@ export default function Prediction() {
               step="0.1"
               name="Weight"
               value={formData.Weight}
+              onWheel={preventWheelChange}
               onChange={handleChange}
               className="w-full border rounded-lg p-3"
             />
@@ -378,6 +400,7 @@ export default function Prediction() {
               max="5"
               name="FCVC"
               value={formData.FCVC}
+              onWheel={preventWheelChange}
               onChange={handleChange}
               className="w-full border rounded-lg p-3"
             />
@@ -395,6 +418,7 @@ export default function Prediction() {
               step="0.1"
               name="NCP"
               value={formData.NCP}
+              onWheel={preventWheelChange}
               onChange={handleChange}
               className="w-full border mt-6 rounded-lg p-3"
             />
@@ -433,6 +457,7 @@ export default function Prediction() {
               type="number"
               step="0.1"
               name="CH2O"
+              onWheel={preventWheelChange}
               value={formData.CH2O}
               onChange={handleChange}
               className="w-full border  rounded-lg p-3"
@@ -455,6 +480,7 @@ export default function Prediction() {
               type="number"
               step="0.1"
               name="FAF"
+              onWheel={preventWheelChange}
               value={formData.FAF}
               onChange={handleChange}
               className="w-full border  rounded-lg p-3"
@@ -473,6 +499,7 @@ export default function Prediction() {
               step="0.1"
               name="TUE"
               value={formData.TUE}
+              onWheel={preventWheelChange}
               onChange={handleChange}
               className="w-full border rounded-lg p-3"
             />
@@ -521,15 +548,27 @@ export default function Prediction() {
 
           
         </form>
+          
           <div className="md:col-span-2 xl:col-span-3 mt-6">
-            <button
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold font-semibold py-3 rounded-lg" type="submit"
-              onClick={handleSubmit}
-            >
-              Predict
-            </button>
+              <button
+                  type="submit"
+                  onClick={handleSubmit}
+                  className={`w-full py-3 rounded-lg font-bold text-white transition-all duration-300 ${
+                      loading
+                          ? "bg-blue-400 cursor-not-allowed"
+                          : "bg-blue-600 hover:bg-blue-700"
+                  }`}
+              >
+                  {loading ? (
+                      <div className="flex items-center justify-center gap-3">
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <span className="text-black">Predicting...</span>
+                      </div>
+                  ) : (
+                      "Predict"
+                  )}
+              </button>
           </div>
-    
             </div>
             <div className="lg:col-span-2 p-4   bg-gradient-to-br from-slate-700 via-blue-950 to-slate-400">
 
@@ -613,7 +652,7 @@ export default function Prediction() {
             ) : (
 
                 <>
-                    <div className="bg-blue-100 flex flex-col justify-center rounded-xl min-h-[160px] p-5 text-center">
+                    <div ref={resultref} className="bg-blue-100 flex flex-col justify-center rounded-xl min-h-[160px] p-5 text-center">
 
                         <p className="text-sm uppercase">
                             Predicted Result
@@ -628,22 +667,30 @@ export default function Prediction() {
 
                     </div>
 
-                    <div className="h-72 sm:h-80 md:h-96 mt-4 bg-neutral-100 rounded-3xl pb-8">
+                    <div  className="h-[320px] sm:h-[320px] md:h-[350px] mt-4 bg-neutral-100 rounded-3xl">
 
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" >
 
                             <BarChart 
+                            className=""
                             width={500}
                             height={300}
-                            data={chartdata}>
+                            data={chartdata}
+                            margin={{
+                                top: 20,
+                                right: 0,
+                                left: 0,
+                                bottom: 40,
+                            }}>
 
                                 <CartesianGrid strokeDasharray="3 3"/>
 
                                 <XAxis
                                     dataKey="name"
-                                    angle={-20}
+                                    angle={-30}
                                     textAnchor="end"
                                     interval={0}
+                                    
                                 />
 
                                 <YAxis
